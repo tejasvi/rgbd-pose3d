@@ -18,6 +18,48 @@ GPU_ID = 0  # id of gpu device
 GPU_MEMORY = None  # in [0.0, 1.0 - eps]; percentage of gpu memory that should be used; None for no limit
 # NO CHANGES BEYOND THIS LINE
 
+def runm (j, im, de, n):
+
+    # load data
+    color = scipy.misc.imread(im)  # color image
+    color = scipy.misc.imresize(color, (1080, 1920))
+    depth_w = scipy.misc.imread(de).astype('float32')  # depth map warped into the color frame
+
+    # intrinsic calibration data
+    ratio = np.array([1920.0/512.0, 1080.0/424.0])
+    K = np.array([[3.7132019636619111e+02 * ratio[0], 0.0, 2.5185416982679811e+02 * ratio[0]],
+                   [0.0, 3.7095047063504268e+02 * ratio[1], 2.1463524817996452e+02 * ratio[1]],
+                   [0.0, 0.0, 1.0]])
+    cam = Camera(K)
+    # create algorithm
+    poseNet = PoseNet3D(ope_depth=OPE_DEPTH, vpn_type=VPN_TYPE,
+                        gpu_id=GPU_ID, gpu_memory_limit=GPU_MEMORY, K=K)
+
+    # loop
+    mask = np.logical_not(depth_w == 0.0)
+
+    start = timer()
+    for i in range(n):
+        # run algorithm
+        coords_pred, det_conf = poseNet.detect(color, depth_w, mask)
+    end = timer()
+
+    print(j, 'took', (end-start)/n, ' sec')
+
+    # visualize
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(color)
+    for i in range(coords_pred.shape[0]):
+        coord2d = cam.project(coords_pred[i, :, :])
+        vis = det_conf[i, :] > CONF_THRESH
+        ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
+    fig.savefig("res{0}.png".format(j))
+    plt.close(fig)
+
+
 if __name__ == '__main__':
     """  APPROX. RUNTIMES (measured on a GTX 1080 Ti, frame with 4 people)
     VPN=fast, OPE=1: 0.51sec = 1.96 Hz
@@ -36,44 +78,5 @@ if __name__ == '__main__':
     img = ['color.png', 'color2.png', 'color4.png']
     dep = ['depth.png', 'depth2.png', 'depth4.png']
     n = 10
-    for i in range(3):
-
-        # load data
-        color = scipy.misc.imread(img[i])  # color image
-        color = scipy.misc.imresize(color, (1080, 1920))
-        depth_w = scipy.misc.imread(dep[i]).astype('float32')  # depth map warped into the color frame
-
-        # intrinsic calibration data
-        ratio = np.array([1920.0/512.0, 1080.0/424.0])
-        K = np.array([[3.7132019636619111e+02 * ratio[0], 0.0, 2.5185416982679811e+02 * ratio[0]],
-                       [0.0, 3.7095047063504268e+02 * ratio[1], 2.1463524817996452e+02 * ratio[1]],
-                       [0.0, 0.0, 1.0]])
-        cam = Camera(K)
-        # create algorithm
-        poseNet = PoseNet3D(ope_depth=OPE_DEPTH, vpn_type=VPN_TYPE,
-                            gpu_id=GPU_ID, gpu_memory_limit=GPU_MEMORY, K=K)
-
-        # loop
-        mask = np.logical_not(depth_w == 0.0)
-
-        start = timer()
-        for i in range(n):
-            # run algorithm
-            coords_pred, det_conf = poseNet.detect(color, depth_w, mask)
-        end = timer()
-
-        print(i, 'took', (end-start)/n, ' sec')
-
-        # visualize
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        ax.imshow(color)
-        for i in range(coords_pred.shape[0]):
-            coord2d = cam.project(coords_pred[i, :, :])
-            vis = det_conf[i, :] > CONF_THRESH
-            ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
-        fig.savefig("res{0}.png".format(i))
-        plt.close(fig)
-
+    j = 2
+    runm(j, img[j], dep[j], n)
