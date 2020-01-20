@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import scipy.misc
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from PoseNet3D import *
@@ -52,6 +54,7 @@ if __name__ == '__main__':
     coords_pred, det_conf = poseNet.detect(color, depth_w, mask)
 
     # visualize
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -61,3 +64,4 @@ if __name__ == '__main__':
         vis = det_conf[i, :] > CONF_THRESH
         ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
     plt.show()
+    plt.savefig('test.png')
