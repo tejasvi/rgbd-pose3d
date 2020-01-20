@@ -49,11 +49,6 @@ if __name__ == '__main__':
                        [0.0, 3.7095047063504268e+02 * ratio[1], 2.1463524817996452e+02 * ratio[1]],
                        [0.0, 0.0, 1.0]])
         cam = Camera(K)
-
-    [14, 0, 3.7132019636619111
-            1392.450736, 0, 944.453137;
-            0, 944.87384, 546.712425;
-            0, 0, 1;
         # create algorithm
         poseNet = PoseNet3D(ope_depth=OPE_DEPTH, vpn_type=VPN_TYPE,
                             gpu_id=GPU_ID, gpu_memory_limit=GPU_MEMORY, K=K)
@@ -79,6 +74,6 @@ if __name__ == '__main__':
             coord2d = cam.project(coords_pred[i, :, :])
             vis = det_conf[i, :] > CONF_THRESH
             ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
-        fig.savefig(f'res{i}.png')
+        fig.savefig("res{0}.png".format(i))
         plt.close(fig)
 
