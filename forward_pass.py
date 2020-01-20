@@ -35,7 +35,7 @@ if __name__ == '__main__':
     """
     img = ['color.png', 'color2.png', 'color4.png']
     dep = ['depth.png', 'depth2.png', 'depth4.png']
-
+    n = 10
     for i in range(3):
 
         # load data
@@ -61,10 +61,13 @@ if __name__ == '__main__':
         # loop
         mask = np.logical_not(depth_w == 0.0)
 
-        for i in range(10):
-            
-        # run algorithm
-        coords_pred, det_conf = poseNet.detect(color, depth_w, mask)
+        start = timer()
+        for i in range(n):
+            # run algorithm
+            coords_pred, det_conf = poseNet.detect(color, depth_w, mask)
+        end = timer()
+
+        print(i, 'took', (end-start)/n, ' sec')
 
         # visualize
         matplotlib.use('Agg')
@@ -76,6 +79,6 @@ if __name__ == '__main__':
             coord2d = cam.project(coords_pred[i, :, :])
             vis = det_conf[i, :] > CONF_THRESH
             ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
-        fig.savefig('test.png')
+        fig.savefig(f'res{i}.png')
         plt.close(fig)
 
