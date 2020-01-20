@@ -63,5 +63,5 @@ if __name__ == '__main__':
         coord2d = cam.project(coords_pred[i, :, :])
         vis = det_conf[i, :] > CONF_THRESH
         ax.plot(coord2d[vis, 0], coord2d[vis, 1], 'ro')
-    plt.show()
-    plt.savefig('test.png')
+    fig.savefig('test.png')
+    plt.close(fig)
